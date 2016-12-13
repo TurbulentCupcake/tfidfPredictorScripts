@@ -1,0 +1,340 @@
+
+R version 3.3.1 (2016-06-21) -- "Bug in Your Hair"
+Copyright (C) 2016 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+[Previously saved workspace restored]
+
+> 
+> load('rdpDataframe.RData')
+> 
+> args = (commandArgs(TRUE))
+> 
+> if(length(args)==0){
++     print("No arguments supplied.")
++     ##supply default values
++     start = 1
++     end = 20000
++     k = 8
++     s = 32
++ }else{
++     for(i in 1:length(args)){
++          eval(parse(text=args[[i]]))
++     }
++ }
+> 
+> 
+> loadfilename<-paste0(c(k,"mersPredictionsOrig.RData"), collapse = "")
+> load(loadfilename)
+> rank <- rdp$genus
+> names(rank) <- rank
+> sequences <- rdp$sequences
+> 
+> 
+> uniqueRank <- unique(rank)
+> names(uniqueRank) <- uniqueRank
+> 
+> 
+> mers <- lapply(sequences,
++ 	function (x) {
++ 		substring(x,
++ 			1:(nchar(x) - k + 1L),
++ 			k:nchar(x))
++ 	})
+> names(mers) <- rank
+> 
+> 
+> # --------------------------  THE ALGORTHM -----------------------------------
+> 	
+> 
+> 	# Singleton sequences must be present in our query database but 
+> 	# not in our 
+>  
+> 	
+> 
+> 	query_ranks <- rank
+> 	query_seqs <- mers
+> 
+> 	# Removing the singleton sequences from our reference database.
+> 
+> 	refernece_db_ranks <- rank
+> 	refernece_db_seqs <- mers
+> 
+> 	bs_confidence_vector <- vector(mode = 'integer', length=length(mers))
+> 	names(bs_confidence_vector) <- rdp$genus
+> 
+> 	
+> 
+> 
+> 	for(i in start:end)
++ 	{
++ 		testSeq <- mers[i]
++ 		testRank <- rank[i]
++ 		predictedRankFromPredictions <- predictions[i]
++ 		training_db_rank <- rank[-i]
++ 		training_db_seqs <- mers[-i]
++ 		confidenceVector <- vector(mode = 'integer', length = length(uniqueRank))
++ 		names(confidenceVector) <- uniqueRank	
++ 
++ 		cat('testRank ', testRank, '\n')
++ 
++ 
++ 		for(j in 1:100) {
++ 
++ 			cat('bootstrapNo : ', j, '\n')
++ 			
++ 
++ 			testSeq <- unlist(testSeq)
++ 			sampleKmerIndices <- sample(length(testSeq), s, replace = FALSE)
++ 			bootstrappedKmers <- testSeq[sampleKmerIndices]
++ 
++ 			overlapVector <- sapply(training_db_seqs, k = bootstrappedKmers, FUN = function(X,k) {
++ 				t1 = unlist(X)
++ 				t2 = unlist(k)
++ 				length(intersect(t1, t2))
++ 				
++ 			})
++ 			
++ 			predicted <- training_db_rank[which(overlapVector == max(overlapVector))[1]]
++ 			confidenceVector[predicted] <- confidenceVector[predicted] + 1
++ 			cat('Predicted In bootstrap : ', predicted,'\n')
++ 		}
++ 
++ 		bs_confidence_vector[i] <- confidenceVector[predictedRankFromPredictions]
++ 		cat('Query Seq : ', i,'\n')
++ 		cat('Final Prediction : ', testRank, '\n')
++ 	}
+testRank  Mycobacterium 
+bootstrapNo :  1 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  2 
+Predicted In bootstrap :  Rheinheimera 
+bootstrapNo :  3 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  4 
+Predicted In bootstrap :  Rheinheimera 
+bootstrapNo :  5 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  6 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  7 
+Predicted In bootstrap :  Mycobacterium 
+bootstrapNo :  8 
+Predicted In bootstrap :  Mycobacterium 
+bootstrapNo :  9 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  10 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  11 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  12 
+Predicted In bootstrap :  Cohnella 
+bootstrapNo :  13 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  14 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  15 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  16 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  17 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  18 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  19 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  20 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  21 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  22 
+Predicted In bootstrap :  Mycobacterium 
+bootstrapNo :  23 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  24 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  25 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  26 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  27 
+Predicted In bootstrap :  Saprospira 
+bootstrapNo :  28 
+Predicted In bootstrap :  Acetobacter 
+bootstrapNo :  29 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  30 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  31 
+Predicted In bootstrap :  Saprospira 
+bootstrapNo :  32 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  33 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  34 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  35 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  36 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  37 
+Predicted In bootstrap :  Saprospira 
+bootstrapNo :  38 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  39 
+Predicted In bootstrap :  Mycobacterium 
+bootstrapNo :  40 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  41 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  42 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  43 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  44 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  45 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  46 
+Predicted In bootstrap :  Rheinheimera 
+bootstrapNo :  47 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  48 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  49 
+Predicted In bootstrap :  Cohnella 
+bootstrapNo :  50 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  51 
+Predicted In bootstrap :  Acetobacter 
+bootstrapNo :  52 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  53 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  54 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  55 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  56 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  57 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  58 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  59 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  60 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  61 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  62 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  63 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  64 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  65 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  66 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  67 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  68 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  69 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  70 
+Predicted In bootstrap :  Acetobacter 
+bootstrapNo :  71 
+Predicted In bootstrap :  Rheinheimera 
+bootstrapNo :  72 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  73 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  74 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  75 
+Predicted In bootstrap :  Mycobacterium 
+bootstrapNo :  76 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  77 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  78 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  79 
+Predicted In bootstrap :  Acetobacter 
+bootstrapNo :  80 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  81 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  82 
+Predicted In bootstrap :  Saprospira 
+bootstrapNo :  83 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  84 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  85 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  86 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  87 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  88 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  89 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  90 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  91 
+Predicted In bootstrap :  Mycobacterium 
+bootstrapNo :  92 
+Predicted In bootstrap :  Mycobacterium 
+bootstrapNo :  93 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  94 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  95 
+Predicted In bootstrap :  Rheinheimera 
+bootstrapNo :  96 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  97 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  98 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  99 
+Predicted In bootstrap :  Vibrio 
+bootstrapNo :  100 
+Predicted In bootstrap :  Vibrio 
+Query Seq :  1 
+Final Prediction :  Mycobacterium 
+> 
+> 	# Now we can use the existing bootstrap to begin
+> 	# our predictions using overlapping k-mers
+> 
+> 	# Now instead of using only part of the sequence,
+> 	# we will use full length sequences and find out
+> 	# the correct genus using the annotation.
+> 
+> 	savelink <- paste(c('origSintaxBootstrap_',k,'mers_s',s,'_',end,'.RData'), collapse = "")
+> 	
+> 	save(bs_confidence_vector, file = savelink)
+> 
+> # ----------------------------------------------------------------------------------------
+> 
+> proc.time()
+   user  system elapsed 
+171.132   0.220 171.217 
