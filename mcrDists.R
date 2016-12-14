@@ -118,25 +118,10 @@ MCpredictions <- MCpredictions[which(MCpredictions!="")]
 OCpredictions <- OCpredictions[which(OCpredictions!="")]
 MCpredictions <- unique(MCpredictions)
 OCpredictions <- unique(OCpredictions)
-# Now we have the MCs and OCs and the size of their respective genera. 
-# Histogram of confidences in the assigned sequence means we need to get the 
-# confidence of every sequence in the assigned genus for every prediction
-# and make a histogram out of it. That would imply that we need to take the 
 
-confidenceList <- list()
-
-for(j in 1:length(OCpredictions))
-{
-	# This gets the positions of the sequences with the rank
-	# of the assigned genus
-	assignedGenusIndices <- which(actual_Rank == OCpredictions[j])
-
-	# now we get the confidences of the assigned, we need to append it to a list
-	confidenceList[[j]] <- confidences[assignedGenusIndices]
-
-}
-
-# Now we unlist the confidencelist to get a vector of just confidences
-confidenceList <- unlist(confidenceList)
-
-histOCconf <- hist(confidenceList)
+# In this case, we can find the location of our location of our genus and find the distances to every
+# sequence in the predicted genus.
+# Once we do that we can average out the distances and get a number d2.
+# Similarly, we can find other sequences in our current genus and find the distances to them from
+# our original genus, once we do that we can find the new d1 .
+# If we take d1-d2 like this for every misclassification, we can get the histogram with all the distances
