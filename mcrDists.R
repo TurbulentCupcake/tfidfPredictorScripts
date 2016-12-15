@@ -17,7 +17,7 @@ load('rdpDataframe.RData')
 
 
 
-thresholdValues <- c(0.80)
+thresholdValues <- c(0.57)
 
 
 
@@ -86,7 +86,7 @@ for(i in seq_along(thresholdValues)) {
 			}
 			# When we try to classifiy a known sequence, we need to take two factors into account. 
 			# If the at above that threshold, your thing is given as unclassified, this is because the 
-			# confidence for it is lower than that threshold. Futhremore, if it passes the test of having a confidecne
+			# confidence for it ismc lower than that threshold. Futhremore, if it passes the test of having a confidecne
 			# that is higher than the threshold we set, then it must pass the test of being classified correctly, which
 			# would indicate our misclassification
 			else if(predicted_Rank != "unclassified") {
@@ -114,14 +114,52 @@ for(i in seq_along(thresholdValues)) {
 sizeOfMCgenera <- table(rdp$genus)[names(table(MCpredictions)[-1])]
 sizeOfOCgenera <- table(rdp$genus)[names(table(OCpredictions)[-1])]
 sizeofallgenera <- table(rdp$genus)
-MCpredictions <- MCpredictions[which(MCpredictions!="")]
-OCpredictions <- OCpredictions[which(OCpredictions!="")]
-MCpredictions <- unique(MCpredictions)
-OCpredictions <- unique(OCpredictions)
+# MCpredictions <- MCpredictions[which(MCpredictions!="")]
+# OCpredictions <- OCpredictions[which(OCpredictions!="")]
+# MCpredictions <- unique(MCpredictions)
+# OCpredictions <- unique(OCpredictions)
 
-# In this case, we can find the location of our location of our genus and find the distances to every
-# sequence in the predicted genus.
-# Once we do that we can average out the distances and get a number d2.
-# Similarly, we can find other sequences in our current genus and find the distances to them from
-# our original genus, once we do that we can find the new d1 .
-# If we take d1-d2 like this for every misclassification, we can get the histogram with all the distances
+# In this case, we find the minimum distances between our current sequence and 
+# Other sequences in our dataset. 
+# In step 2, we find the distance between sequences in our own genus..
+# For both instances, we find the minimum and distances in both cases and find
+# the subtract one from the other. 
+
+MCpredictionsIndices <- which(OCpredictions != "")
+
+# Now that we have our indices, we can use the genus they point to on
+# both the actual and the predicted and find the distances, it begins now
+
+distList<-list()
+
+
+for(k in 1:length(MCpredictionsIndices)){
+	cat('OC------------------------------------------\n')
+	cat(k,'\n')
+	actual <- rdp$genus[MCpredictionsIndices[k]]
+	predicted <- OCpredictions[MCpredictionsIndices[k]]
+
+	actualIndices <- which(rdp$genus == actual)
+	predictedIndices <- which(rdp$genus == predicted)
+
+	# remove our sequences location from the actual indices
+
+	actualIndices <- actualIndices[which(actualIndices!=MCpredictionsIndices[k])]
+
+	# OCw we can find the distances, 
+
+	g2dist <- min(d[MCpredictionsIndices[k],predictedIndices])
+
+
+
+	g1dist <- min(d[MCpredictionsIndices[k],actualIndices])
+
+
+	cat(g1dist - g2dist,'\n')
+	distList[[k]] <- g1dist-g2dist
+
+}
+
+distList<-unlist(distList)
+
+h1 <- hist(distList, breaks = 30)
