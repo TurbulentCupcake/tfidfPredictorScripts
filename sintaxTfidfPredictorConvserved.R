@@ -21,16 +21,14 @@ load('RDP_V4_region.RData')
 load('rdpDataframe.RData')
 loadfilename <- paste(c('tfidf',k,'mers.RData'),collapse = "")
 
+
+# This would get us the ranks of all the sequences in our conserved dataset
 load(loadfilename)
 rank <- rdp$genus[index]
 names(rank) <- rank
 sequences <- V4region
-
-
 uniqueRank <- unique(rank)
 names(uniqueRank) <- uniqueRank
-
-
 mers <- lapply(sequences,
 	function (x) {
 		substring(x,
@@ -62,24 +60,34 @@ names(mers) <- rank
 	# Singleton sequences must be present in our query database but 
 	# not in our 
  
-	query_ranks <- rank
-	query_seqs <- mers
+	test_ranks <- rank
+	test_seqs <- mers
+	sequences2 <- rdp$sequences
+	query_seqs <- lapply(sequences2,
+        function (x) {
+                substring(x,
+                        1:(nchar(x) - k + 1L),
+                        k:nchar(x))
+        })
+	query_ranks <- rdp$genus
+
+	
 
 
 	# Removing the singleton sequences from our reference database.
 
 	tfidfVals <- eval(parse(text = paste(c('tfidf',k,'mers'), collapse = '')))
 
-	predictionVector <- vector(mode = 'character', length = length(query_ranks))
+	predictionVector <- vector(mode = 'character', length = length(test_ranks))
 
 	for(i in start:end)
 	{
 
-		tfidfSeq <- tfidfVals[[i]]
-		testSeq <- query_seqs[i]
-		testRank <- query_ranks[i]
-		training_db_rank <- query_ranks[-i]
-		training_db_seqs <- query_seqs[-i]
+		tfidfSeq <- tfidfVals[[index[i]]]
+		testSeq <- test_seqs[i]
+		testRank <- test_ranks[i]
+		training_db_rank <- query_ranks[-index[i]]
+		training_db_seqs <- query_seqs[-index[i]]
 		testSeq <- unlist(testSeq)
 		overlapVector <- sapply(training_db_seqs, k = testSeq, FUN = function(X,k) {
 			t1 = unlist(k)

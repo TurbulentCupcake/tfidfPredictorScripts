@@ -31,9 +31,13 @@ veks <- c('orig','4mers','5mers','6mers','7mers','8mers','9mers')
 
 for(lab2 in 1:(length(veks) - 1 )) { 
 
-loadfile1 <- paste(c("../PredictionsRData/",veks[lab2+1],"Confidencesv",version,"s",s,".RData"), collapse = "")
-loadfile2 <- paste(c("../PredictionsRData/",veks[lab2+1],"Predictions.RData"), collapse = "")
+# loadfile1 <- paste(c("../PredictionsRData/",veks[lab2+1],"Confidencesv",version,"s",s,".RData"), collapse = "")
+# loadfile2 <- paste(c("../PredictionsRData/",veks[lab2+1],"Predictions.RData"), collapse = "")
+loadfile1 <- 'conservedPredictions.RData'
+loadfile2 <- 'RDP_V4_region.RData'
+loadfile3 <- '8mersConfidencesv3s32.RData'
 load(loadfile1)
+load(loadfile3)
 load(loadfile2)
 linetype = lab2
 # load('origConfidence.RData')
@@ -55,7 +59,7 @@ lengthOfKnown <- length(actual)-length(singletonGenera)
 MCvector <- vector(mode = 'double', length = length(thresholdValues))
 OCvector <- vector(mode = 'double', length = length(thresholdValues))
 # bootstrapValues <- confidences
-bootstrapValues <- confidences
+bootstrapValues <- confidences[index]
 # if(lab2 == 1){ 
 # 			bootstrapValues <- bootstrapValues*100
 # 		}
@@ -218,7 +222,7 @@ for(i in seq_along(thresholdValues)) {
 			# would indicate our misclassification
 			else if(predicted_Rank != "unclassified") {
 				if(predicted_Rank != actual_Rank){
-			
+				
 				MC = MC + 1
 				}
 			}
