@@ -1,6 +1,5 @@
-# THis is the accompanying code to bootstrap predictions
-# for the predictor. 
-# 
+# This is the bootstrapping model for the v2 where our training and testing set ist
+# The same. 
 
 
 args = (commandArgs(TRUE))
@@ -18,9 +17,8 @@ if(length(args)==0){
     }
 }
 
-
 loadfilename <- paste(c('tfidf',k,'mers.RData'),collapse = "")
-loadfilename2 <- paste(c('LOTOv1_',k,'mersPredictions.RData'), collapse = "")
+loadfilename2 <- paste(c('LOTOv2_',k,'mersPredictions.RData'), collapse = "")
 load(loadfilename)
 load(loadfilename2)
 load('rdpDataframe.RData')
@@ -29,8 +27,6 @@ load('rdpDataframe.RData')
 rank <- rdp$genus
 names(rank) <- rank
 sequences <- rdp$sequences
-
-
 
 uniqueRank <- unique(rank)
 names(uniqueRank) <- uniqueRank
@@ -44,31 +40,25 @@ mers <- lapply(sequences,
 	})
 names(mers) <- rank
 
-
 testingSeqsIndices <- lapply(uniqueRank, function(x) { 
 		which(x == rank)[1]
 	})
 testingSeqsIndices <- unlist(testingSeqsIndices)
 testingSeqs <- mers[testingSeqsIndices]
 
-
-
 bs_confidence_vector <- vector(mode = 'integer', length=length(testingSeqs))
 names(bs_confidence_vector) <- uniqueRank
 tfidfVals <- eval(parse(text = paste(c('tfidf',k,'mers'), collapse = '')))
 
 
-for(i in start:end) { 
+for(i in start:end){ 
 
-	tfidfSeq <- tfidfVals[[testingSeqsIndices[i]]]
-	testSeq <- testingSeqs[i]
-	# Now that we have the test genus, we to edit our training sequences such that
-	# we remove those sequences that dont have the same sequences as the genus
-	testGenus <- uniqueRank[i]
-	testGenusIndices <- which(rank %in% testGenus)
-	training_db_seqs <- mers[-testGenusIndices]
-	training_db_rank <- rank[-testGenusIndices]
-	sequence_df <- data.frame(matrix(NA, nrow = 100,  ncol = 5))
+        tfidfSeq <- tfidfVals[[testingSeqsIndices[i]]]
+        testSeq <- testingSeqs[i]
+        testRank <- uniqueRank[i]
+        training_db_seqs <- testingSeqs[-i]
+        training_db_rank <- uniqueRank[-i]
+        sequence_df <- data.frame(matrix(NA, nrow = 100,  ncol = 5))
 
 
 	cat('testRank ', testRank, '\n')
@@ -122,7 +112,7 @@ for(i in start:end) {
 		# Once we have the values for all the bootstraps. we need to calculate te di/davg fore every bootstrap
 		# we do this by doing the following 
 		davg <- sum(sequence_df[,3])/100
-		sequence_df[,4] <- sequence_df[,3]/davg
+		sequence_df[,4] <- sequence_df[,3]/sdavg
 
 		# In this version, our confidence is determined by the fact that we tie the
 		# goodness of our bootstrap with how good our prediction was in that bootstrap
@@ -150,7 +140,8 @@ for(i in start:end) {
 	}
 
 
-savelink <- paste(c('LOTOv1Bootstrap_',k,'mers_',end,'_v3.RData'), collapse = "")
+
+savelink <- paste(c('LOTOv2Bootstrap_',k,'mers_',end,'_v3.RData'), collapse = "")
 save(bs_confidence_vector, file  = savelink)
 	
 

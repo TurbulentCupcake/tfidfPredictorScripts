@@ -98,4 +98,4 @@ for(i in start:end) {
 }
 
 savelink <- paste(c('LOTOv1Prediction_',k,'mers_',end,'_v3.RData'), collapse = "")
-save(predictionVector, savelink)
+save(predictionVector, file = savelink)
