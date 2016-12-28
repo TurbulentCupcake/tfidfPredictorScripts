@@ -1,6 +1,6 @@
 
 load('rdpDataframe.RData')
-load('RDP_V1_regions.RData')
+load('RDP_V4_region.RData')
 
 args = (commandArgs(TRUE))
 
@@ -90,8 +90,11 @@ names(mers) <- rank
 		})
 		maxPos <- which(overlapVector == max(overlapVector))
 
-		predicted <- training_db_rank[maxPos]
+		predicted <- training_db_rank[maxPos][1]
 		predictionVector[i] <- predicted
+
+
+
 
 		cat('Number : ', i ,'\n')
 		cat('Test Rank ', testRank,'\n')

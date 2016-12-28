@@ -13,8 +13,8 @@ if(length(args)==0){
 }
 
 
-plotname <- paste0(c("tfidfSintaxV",version,"S",s), collapse = "")
-jpeg(filename = paste0(c(plotname, ".jpeg"), width = 1366, height = 768))
+plotname <- paste0(c("OrigSintax_vs_V3"), collapse = "")
+# jpeg(filename = paste0(c(plotname, ".jpeg"), width = 1366, height = 768))
 
 plot(x = NULL , y = NULL , xlim = c(0.00, 1.00), ylim = c(0.00,1.00), 
     type = 'l' , xlab = '% Classified'
@@ -33,26 +33,26 @@ for(lab2 in 1:(length(veks) - 1 )) {
 
 # loadfile1 <- paste(c("../PredictionsRData/",veks[lab2+1],"Confidencesv",version,"s",s,".RData"), collapse = "")
 # loadfile2 <- paste(c("../PredictionsRData/",veks[lab2+1],"Predictions.RData"), collapse = "")
-loadfile1 <- 'conservedPredictions.RData'
+loadfile1 <- '8mersPredictions.RData'
 loadfile2 <- 'RDP_V4_region.RData'
 loadfile3 <- '8mersConfidencesv3s32.RData'
 load(loadfile1)
 load(loadfile3)
 load(loadfile2)
-linetype = lab2
+
 # load('origConfidence.RData')
 # load('origPredictions.RData')
 load('rdpDataframe.RData')
 
 
 
-thresholdValues <- seq(0.00, 1.00 , 0.01)
+thresholdValues <- seq(0.80)
 
 
-
+index <- seq(1:13212)
 predictions <- predictions
 # predictions <- predictions
-actual <- rdp$genus
+actual <- rdp$genus[index]
 singletonGenera <- names(which(table(actual) == 1))
 knownGenera <- names(which(table(actual) != 1))
 lengthOfKnown <- length(actual)-length(singletonGenera)
@@ -63,7 +63,7 @@ bootstrapValues <- confidences[index]
 # if(lab2 == 1){ 
 # 			bootstrapValues <- bootstrapValues*100
 # 		}
-bootstrapValues <- bootstrapValues/100
+# bootstrapValues <- bootstrapValues/100
 unclassifiedVector <- vector(mode = 'double', length = length(thresholdValues))
 
 
@@ -130,10 +130,12 @@ for(i in seq_along(thresholdValues)) {
 
 }
 
-
+linetype=2
 points(x = (1 - unclassifiedVector) , y =  sqrt(OCvector) ,type = 'l', col = 'red' ,lwd = 2, lty = linetype) 
 
 points(x =  (1 - unclassifiedVector) , y =  sqrt(MCvector) ,type = 'l', col = 'blue' ,lwd = 2, lty = linetype) 
+
+
 }
 
 
@@ -249,6 +251,14 @@ legend("topleft", c('OrigSintax','TfidfSintax4mers','TfidfSintax5mers',
 		'TfidfSintax6mers'
 		,'TfidfSintax7mers','TfidfSintax8mers', 'TfidfSintax9mers'), lty=c(1,1,2,3,4,5,6), lwd = c(3,2,2,2,2,2,2))
 
+
+
 legend("top", c("OCR","MCR"), 
 			 lty = c(1,1,1), col = c("red","blue"), lwd = c(3,3,3))
+
+plotloc <- locator()
+legend(x = plotloc$x[1], y = plotloc$y[1], c("OrigSintax","V3"), lty = c(3,2), lwd = c(2,2))
+legend(x = plotloc$x[2], y = plotloc$y[2], c("MCR","OCR"), col = c("blue","red"), lty = c(1,1), lwd = c(2,2))
+
+
 dev.off()

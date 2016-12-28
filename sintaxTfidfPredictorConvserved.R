@@ -27,8 +27,10 @@ load(loadfilename)
 rank <- rdp$genus[index]
 names(rank) <- rank
 sequences <- V4region
+
 uniqueRank <- unique(rank)
 names(uniqueRank) <- uniqueRank
+
 mers <- lapply(sequences,
 	function (x) {
 		substring(x,
