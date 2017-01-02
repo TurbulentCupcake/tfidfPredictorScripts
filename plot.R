@@ -13,14 +13,16 @@ if(length(args)==0){
 }
 
 
-plotname <- paste0(c("OrigSintax_vs_V3"), collapse = "")
+plotname <- paste0(c("LOTOv1"), collapse = "")
 # jpeg(filename = paste0(c(plotname, ".jpeg"), width = 1366, height = 768))
 
 plot(x = NULL , y = NULL , xlim = c(0.00, 1.00), ylim = c(0.00,1.00), 
     type = 'l' , xlab = '% Classified'
-    , ylab = 'Rate', main = plotname, xaxs = 'i', yaxs='i', yaxt = 'n')
+    , ylab = 'Rate', main = 'Orig_vs_v3|V4region', xaxs = 'i', yaxs='i', yaxt = 'n')
 labels <- c(0, 0.01, 0.05, 0.10, 0.25, 0.50, 0.75, 1.00)
 axis(2, labels^0.5,  labels)
+axis(2, seq(0,0.1,0.01)^0.5, labels = rep('',11))
+axis(2, seq(0.1,1.00, 0.05)^0.5, labels = rep('',19))
 
 
 # plot(x = NULL , y = NULL , xlim = c(0.00, 1.00), ylim = c(0.00,1.00), 
@@ -33,8 +35,8 @@ for(lab2 in 1:(length(veks) - 1 )) {
 
 # loadfile1 <- paste(c("../PredictionsRData/",veks[lab2+1],"Confidencesv",version,"s",s,".RData"), collapse = "")
 # loadfile2 <- paste(c("../PredictionsRData/",veks[lab2+1],"Predictions.RData"), collapse = "")
-loadfile1 <- '8mersPredictions.RData'
-loadfile2 <- 'RDP_V4_region.RData'
+loadfile1 <- 'RDP_V4_region.RData'
+loadfile2 <- 'conservedPredictionsv3.RData'
 loadfile3 <- '8mersConfidencesv3s32.RData'
 load(loadfile1)
 load(loadfile3)
@@ -46,15 +48,14 @@ load('rdpDataframe.RData')
 
 
 
-thresholdValues <- seq(0.80)
+thresholdValues <- seq(0.00,1.00,0.01)
 
 
-index <- seq(1:13212)
 predictions <- predictions
 # predictions <- predictions
 actual <- rdp$genus[index]
-singletonGenera <- names(which(table(actual) == 1))
-knownGenera <- names(which(table(actual) != 1))
+singletonGenera <- names(which(table(rdp$genus) == 1))
+knownGenera <- names(which(table(rdp$genus) != 1))
 lengthOfKnown <- length(actual)-length(singletonGenera)
 MCvector <- vector(mode = 'double', length = length(thresholdValues))
 OCvector <- vector(mode = 'double', length = length(thresholdValues))
@@ -130,7 +131,7 @@ for(i in seq_along(thresholdValues)) {
 
 }
 
-linetype=2
+linetype=3
 points(x = (1 - unclassifiedVector) , y =  sqrt(OCvector) ,type = 'l', col = 'red' ,lwd = 2, lty = linetype) 
 
 points(x =  (1 - unclassifiedVector) , y =  sqrt(MCvector) ,type = 'l', col = 'blue' ,lwd = 2, lty = linetype) 
@@ -253,8 +254,9 @@ legend("topleft", c('OrigSintax','TfidfSintax4mers','TfidfSintax5mers',
 
 
 
-legend("top", c("OCR","MCR"), 
-			 lty = c(1,1,1), col = c("red","blue"), lwd = c(3,3,3))
+legend(x = locs$x[1],y = locs$y[1], c("OCR","MCR"), 
+			 lty = c(1,1), col = c("red","blue"), lwd = c(3,3))
+legend(x = locs$x[2], y = locs$y[2], c("Orig","V3"), lty = c(2,3), lwd = c(3,3))
 
 plotloc <- locator()
 legend(x = plotloc$x[1], y = plotloc$y[1], c("OrigSintax","V3"), lty = c(3,2), lwd = c(2,2))

@@ -71,7 +71,7 @@ for(i in start:end) {
 	sequence_df <- data.frame(matrix(NA, nrow = 100,  ncol = 5))
 
 
-	cat('testRank ', testRank, '\n')
+	cat('testRank ', testGenus, '\n')
 
 		for(j in 1:100) {
 
@@ -146,7 +146,7 @@ for(i in start:end) {
 
 		bs_confidence_vector[i] <- confidence
 		cat('Query Seq : ', i,'\n')
-		cat('Final Prediction : ', testRank, '\n')
+		cat('Final Prediction : ', testGenus, '\n')
 	}
 
 

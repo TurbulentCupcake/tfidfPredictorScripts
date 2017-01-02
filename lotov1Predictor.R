@@ -46,8 +46,8 @@ names(mers) <- rank
 # get the indices of every unique sequence and take any one of them into our 
 # testing sequence (here we take the first one for convenience).
 
-testingSeqsIndices <- lapply(uniqueRank, function(x) { 
-		which(x == rank)[1]
+testingSeqsIndices <- lapply(uniqueGenera, function(x) { 
+		which(x == rdp$genus)[1]
 	})
 testingSeqsIndices <- unlist(testingSeqsIndices)
 testingSeqs <- mers[testingSeqsIndices]

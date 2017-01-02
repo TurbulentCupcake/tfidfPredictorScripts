@@ -1,4 +1,4 @@
-# tfidf contains the tf and idf functions, whose values will be returned 
+/# tfidf contains the tf and idf functions, whose values will be returned 
 # into the current namespace. 
 # About the functions : 
 # ----- tf(query, dataset, mode) 
