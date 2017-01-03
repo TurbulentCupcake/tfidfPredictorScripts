@@ -60,13 +60,14 @@ names(mers) <- rank
 
 	for(i in start:end)
 	{
-		testSeq <- mers[i]
-		testRank <- rank[i]
+		testSeq <- mers[[i]]
+		testRank <- rank[[i]]
 		predictedRankFromPredictions <- predictions[i]
 		training_db_rank <- rank[-i]
 		training_db_seqs <- mers[-i]
 		confidenceVector <- vector(mode = 'integer', length = length(uniqueRank))
 		names(confidenceVector) <- uniqueRank	
+		samp_matrix_wo <- t(sapply(1:100, function(x) sample(length(testSeq), 32)))
 
 		cat('testRank ', testRank, '\n')
 
@@ -77,7 +78,7 @@ names(mers) <- rank
 			
 
 			testSeq <- unlist(testSeq)
-			sampleKmerIndices <- sample(length(testSeq), s, replace = FALSE)
+			sampleKmerIndices <- samp_matrix_wo[j,]
 			bootstrappedKmers <- testSeq[sampleKmerIndices]
 
 			overlapVector <- sapply(training_db_seqs, k = bootstrappedKmers, FUN = function(X,k) {

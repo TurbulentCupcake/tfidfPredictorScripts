@@ -1,14 +1,29 @@
-# This is the bootstrapping model for the v2 where our training and testing set ist
-# The same. 
+/# tfidf contains the tf and idf functions, whose values will be returned 
+# into the current namespace. 
+# About the functions : 
+# ----- tf(query, dataset, mode) 
+# This returns the term frequency of the kmers in the query seqeunce as
+# a vector, where the names of the vector is the kmers and the values
+# of the vector is the term frequency.
+# >>>> Possible modes : rawsmooth, lognormal, doublenormK (default k = 0.5) 
+# ---- idf(query, dataset, mode) 
+# This returns the inverse document frequency as a vector that contains,
+# the idf values for every query in our sequence against the dataset.
+# The vector names are the names of the kmers and their respective
+# idf values. 
+# >>>> Possible modes : log, logsmooth, logmax, probfreq
+# Refer to tfidf wikipedia page for more information on the tfidf. 
 
+
+# source('tfidf.R')
 
 args = (commandArgs(TRUE))
 
 if(length(args)==0){
     print("No arguments supplied.")
     ##supply default values
-    start = 2
-    end = 2
+    start = 1
+    end = 13212
     k = 8 	
     s = 32
 }else{
@@ -18,7 +33,7 @@ if(length(args)==0){
 }
 
 loadfilename <- paste(c('tfidf',k,'mers.RData'),collapse = "")
-loadfilename2 <- paste(c('LOTOv2_',k,'mersPredictions.RData'), collapse = "")
+loadfilename2 <- paste(c(k,'mersPredictions.RData'), collapse = "")
 load(loadfilename)
 load(loadfilename2)
 load('rdpDataframe.RData')
@@ -27,6 +42,8 @@ load('rdpDataframe.RData')
 rank <- rdp$genus
 names(rank) <- rank
 sequences <- rdp$sequences
+
+
 
 uniqueRank <- unique(rank)
 names(uniqueRank) <- uniqueRank
@@ -40,28 +57,48 @@ mers <- lapply(sequences,
 	})
 names(mers) <- rank
 
-testingSeqsIndices <- lapply(uniqueRank, function(x) { 
-		which(x == rank)[1]
-	})
-testingSeqsIndices <- unlist(testingSeqsIndices)
-testingSeqs <- mers[testingSeqsIndices]
 
-bs_confidence_vector <- vector(mode = 'integer', length=length(testingSeqs))
-names(bs_confidence_vector) <- uniqueRank
-tfidfVals <- eval(parse(text = paste(c('tfidf',k,'mers'), collapse = '')))
+# MODIFICATION TO EXISTING SINTAX ALGORITHM 
 
+ 
 
-for(i in start:end){ 
+# --------------------------  THE ALGORTHM -----------------------------------
+	
 
-        tfidfSeq <- tfidfVals[[testingSeqsIndices[i]]]
-        testSeq <- testingSeqs[i]
-        testRank <- uniqueRank[i]
-        training_db_seqs <- testingSeqs[-i]
-        training_db_rank <- uniqueRank[-i]
-        sequence_df <- data.frame(matrix(NA, nrow = 100,  ncol = 5))
+	# Singleton sequences must be present in our query database but 
+	# not in our 
 
 
-	cat('testRank ', testRank, '\n')
+	query_ranks <- rank
+	query_seqs <- mers
+
+	# Removing the singleton sequences from our reference database.
+
+	refernece_db_ranks <- rank
+	refernece_db_seqs <- mers
+
+	bs_confidence_vector <- vector(mode = 'integer', length=length(mers))
+	names(bs_confidence_vector) <- rdp$genus
+
+	tfidfVals <- eval(parse(text = paste(c('tfidf',k,'mers'), collapse = '')))
+	for(i in start:end)
+	{	
+		tfidfSeq <- tfidfVals[[i]]
+		testSeq <- mers[[i]]
+		testRank <- rank[[i]]
+		# predictedRankFromPredictions <- predicted_RDP_sintax[i]
+		training_db_rank <- rank[-i]
+		training_db_seqs <- mers[-i]
+		confidenceVector <- vector(mode = 'integer', length = length(uniqueRank))
+		names(confidenceVector) <- uniqueRank	
+		sequence_df <- data.frame(matrix(NA, nrow = 100,  ncol = 5))
+		samp_matrix_wo <- t(sapply(1:100, function(x) sample(length(testSeq), 32)))
+
+
+
+
+
+		cat('testRank ', testRank, '\n')
 
 		for(j in 1:100) {
 
@@ -69,7 +106,7 @@ for(i in start:end){
 			
 
 			testSeq <- unlist(testSeq)
-			sampleKmerIndices <- sample(length(testSeq), s, replace = FALSE)
+			sampleKmerIndices <- samp_matrix_wo[j,]#sample(length(testSeq), s, replace = FALSE)
 			bootstrappedKmers <- testSeq[sampleKmerIndices]
 			# The following is our overlap vector, which we can use to find the 
 			overlapVector <- sapply(training_db_seqs, k = bootstrappedKmers, FUN = function(X,k) {
@@ -108,7 +145,6 @@ for(i in start:end){
 			
 		}
 
-
 		# Once we have the values for all the bootstraps. we need to calculate te di/davg fore every bootstrap
 		# we do this by doing the following 
 		davg <- sum(sequence_df[,3])/100
@@ -139,11 +175,15 @@ for(i in start:end){
 		cat('Final Prediction : ', testRank, '\n')
 	}
 
+	# Now we can use the existing bootstrap to begin
+	# our predictions using overlapping k-mers
 
+	# Now instead of using only part of the sequence,
+	# we will use full length sequences and find out
+	# the correct genus using the annotation.
 
-savelink <- paste(c('LOTOv2Bootstrap_',k,'mers_',end,'_v3.RData'), collapse = "")
-save(bs_confidence_vector, file  = savelink)
+	savelink <- paste(c('SINTAXtfidf',k,'mers_',end,'_v3.RData'), collapse = "")
 	
+	save(bs_confidence_vector, file = savelink)
 
-
-
+# ----------------------------------------------------------------------------------------

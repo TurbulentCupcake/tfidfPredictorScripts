@@ -1,7 +1,6 @@
 
 load('rdpDataframe.RData')
 
-
 args = (commandArgs(TRUE))
 
 if(length(args)==0){
@@ -16,7 +15,9 @@ if(length(args)==0){
          eval(parse(text=args[[i]]))
     }
 }
-# loadfilename<- paste0(c(k,"mersOrigPredictions.RData"), collapse = "")
+
+
+#  loadfilename<-paste0(c(k,"mersPredictionsOrig.RData"), collapse = "")
 load('origPredictions.RData')
 rank <- rdp$genus
 names(rank) <- rank
@@ -60,13 +61,14 @@ names(mers) <- rank
 
 	for(i in start:end)
 	{
-		testSeq <- mers[i]
-		testRank <- rank[i]
+		testSeq <- mers[[i]]
+		testRank <- rank[[i]]
 		predictedRankFromPredictions <- predictions[i]
-		training_db_rank <- rank[-i]
-		training_db_seqs <- mers[-i]
+		training_db_rank <- rank[[-i]]
+		training_db_seqs <- mers[[-i]]
 		confidenceVector <- vector(mode = 'integer', length = length(uniqueRank))
 		names(confidenceVector) <- uniqueRank	
+		samp_matrix_w <- matrix(sample(length(testSeq),3200,replace = TRUE),nrow=100,ncol=32)
 
 		cat('testRank ', testRank, '\n')
 
@@ -77,7 +79,7 @@ names(mers) <- rank
 			
 
 			testSeq <- unlist(testSeq)
-			sampleKmerIndices <- sample(length(testSeq), s, replace = FALSE)
+			sampleKmerIndices <- samp_matrix_w[j,]#sample(length(testSeq), s, replace = FALSE)
 			bootstrappedKmers <- testSeq[sampleKmerIndices]
 
 			overlapVector <- sapply(training_db_seqs, k = bootstrappedKmers, FUN = function(X,k) {
@@ -87,7 +89,7 @@ names(mers) <- rank
 				
 			})
 			
-			predicted <- training_db_rank[which(overlapVector == max(overlapVector))[1]]
+			predicted <- training_db_rank[sample(which(overlapVector == max(overlapVector)))[1]]
 			confidenceVector[predicted] <- confidenceVector[predicted] + 1
 			cat('Predicted In bootstrap : ', predicted,'\n')
 		}
@@ -104,7 +106,7 @@ names(mers) <- rank
 	# we will use full length sequences and find out
 	# the correct genus using the annotation.
 
-	savelink <- paste(c('newRDPBootstrap_',k,'_',end,'.RData'), collapse = "")
+	savelink <- paste(c('origSintaxBootstrap_',k,'mers_s',s,'_',end,'.RData'), collapse = "")
 	
 	save(bs_confidence_vector, file = savelink)
 

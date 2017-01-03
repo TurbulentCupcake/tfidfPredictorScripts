@@ -1,7 +1,6 @@
 
 load('rdpDataframe.RData')
 
-
 args = (commandArgs(TRUE))
 
 if(length(args)==0){
@@ -16,7 +15,9 @@ if(length(args)==0){
          eval(parse(text=args[[i]]))
     }
 }
-# loadfilename<- paste0(c(k,"mersOrigPredictions.RData"), collapse = "")
+
+
+#  loadfilename<-paste0(c(k,"mersPredictionsOrig.RData"), collapse = "")
 load('origPredictions.RData')
 rank <- rdp$genus
 names(rank) <- rank
@@ -66,7 +67,9 @@ names(mers) <- rank
 		training_db_rank <- rank[-i]
 		training_db_seqs <- mers[-i]
 		confidenceVector <- vector(mode = 'integer', length = length(uniqueRank))
-		names(confidenceVector) <- uniqueRank	
+		names(confidenceVector) <- uniqueRank
+		samp_matrix_wo <- t(sapply(1:100, function(x) sample(last, 32)))
+
 
 		cat('testRank ', testRank, '\n')
 
@@ -77,7 +80,7 @@ names(mers) <- rank
 			
 
 			testSeq <- unlist(testSeq)
-			sampleKmerIndices <- sample(length(testSeq), s, replace = FALSE)
+			sampleKmerIndices <- samp_matrix_wo[j,]#sample(length(testSeq), s, replace = FALSE)
 			bootstrappedKmers <- testSeq[sampleKmerIndices]
 
 			overlapVector <- sapply(training_db_seqs, k = bootstrappedKmers, FUN = function(X,k) {
@@ -104,7 +107,7 @@ names(mers) <- rank
 	# we will use full length sequences and find out
 	# the correct genus using the annotation.
 
-	savelink <- paste(c('newRDPBootstrap_',k,'_',end,'.RData'), collapse = "")
+	savelink <- paste(c('origSintaxBootstrap_',k,'mers_s',s,'_',end,'.RData'), collapse = "")
 	
 	save(bs_confidence_vector, file = savelink)
 
