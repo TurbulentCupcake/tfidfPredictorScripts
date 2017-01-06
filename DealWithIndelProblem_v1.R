@@ -25,6 +25,8 @@ for (i in seq_len(length(w) - 1)) {
 		eliminate[w[i]] <- TRUE
 	}
 }
+m[eliminate] <- NA_integer_
+
 print(eliminate)
 matches <- which(!is.na(m) & !eliminate)
 print(length(matches)) # the number of hits after indel correction

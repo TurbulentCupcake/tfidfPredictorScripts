@@ -18,7 +18,7 @@ plotname <- paste0(c("LOTOv1"), collapse = "")
 
 plot(x = NULL , y = NULL , xlim = c(0.00, 1.00), ylim = c(0.00,1.00), 
     type = 'l' , xlab = '% Classified'
-    , ylab = 'Rate', main = 'Orig_vs_v3|V4region', xaxs = 'i', yaxs='i', yaxt = 'n')
+    , ylab = 'Rate', main = 'v3|v3WR|v3WoR|v4WR|v4WoR', xaxs = 'i', yaxs='i', yaxt = 'n')
 labels <- c(0, 0.01, 0.05, 0.10, 0.25, 0.50, 0.75, 1.00)
 axis(2, labels^0.5,  labels)
 axis(2, seq(0,0.1,0.01)^0.5, labels = rep('',11))
@@ -35,10 +35,10 @@ for(lab2 in 1:(length(veks) - 1 )) {
 
 # loadfile1 <- paste(c("../PredictionsRData/",veks[lab2+1],"Confidencesv",version,"s",s,".RData"), collapse = "")
 # loadfile2 <- paste(c("../PredictionsRData/",veks[lab2+1],"Predictions.RData"), collapse = "")
-loadfile1 <- 'RDP_V4_region.RData'
-loadfile2 <- 'conservedPredictionsv3.RData'
+# loadfile1 <- 'RDP_V4_region.RData'
+loadfile2 <- '8mersPredictions.RData'
 loadfile3 <- '8mersConfidencesv3s32.RData'
-load(loadfile1)
+# load(loadfile1)
 load(loadfile3)
 load(loadfile2)
 
@@ -53,14 +53,14 @@ thresholdValues <- seq(0.00,1.00,0.01)
 
 predictions <- predictions
 # predictions <- predictions
-actual <- rdp$genus[index]
+actual <- rdp$genus
 singletonGenera <- names(which(table(rdp$genus) == 1))
 knownGenera <- names(which(table(rdp$genus) != 1))
 lengthOfKnown <- length(actual)-length(singletonGenera)
 MCvector <- vector(mode = 'double', length = length(thresholdValues))
 OCvector <- vector(mode = 'double', length = length(thresholdValues))
 # bootstrapValues <- confidences
-bootstrapValues <- confidences[index]
+bootstrapValues <- confidences
 # if(lab2 == 1){ 
 # 			bootstrapValues <- bootstrapValues*100
 # 		}
@@ -131,7 +131,7 @@ for(i in seq_along(thresholdValues)) {
 
 }
 
-linetype=3
+linetype=1
 points(x = (1 - unclassifiedVector) , y =  sqrt(OCvector) ,type = 'l', col = 'red' ,lwd = 2, lty = linetype) 
 
 points(x =  (1 - unclassifiedVector) , y =  sqrt(MCvector) ,type = 'l', col = 'blue' ,lwd = 2, lty = linetype) 
@@ -259,7 +259,7 @@ legend(x = locs$x[1],y = locs$y[1], c("OCR","MCR"),
 legend(x = locs$x[2], y = locs$y[2], c("Orig","V3"), lty = c(2,3), lwd = c(3,3))
 
 plotloc <- locator()
-legend(x = plotloc$x[1], y = plotloc$y[1], c("OrigSintax","V3"), lty = c(3,2), lwd = c(2,2))
+legend(x = plotloc$x[1], y = plotloc$y[1], c("v3","v3WR","v3WoR","v4WR","v4WoR"), lty = c(1,2,3,4,5), lwd = c(2,2,2,2,2))
 legend(x = plotloc$x[2], y = plotloc$y[2], c("MCR","OCR"), col = c("blue","red"), lty = c(1,1), lwd = c(2,2))
 
 
