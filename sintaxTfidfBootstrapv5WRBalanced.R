@@ -14,7 +14,6 @@
 # >>>> Possible modes : log, logsmooth, logmax, probfreq
 # Refer to tfidf wikipedia page for more information on the tfidf. 
 
-
 # source('tfidf.R')
 
 args = (commandArgs(TRUE))
@@ -31,12 +30,12 @@ if(length(args)==0){
          eval(parse(text=args[[i]]))
     }
 }
-
-load('rdpDataframe.RData')
 loadfilename <- paste(c('tfidf',k,'mers.RData'),collapse = "")
-loadfilename2 <- paste(c(k,'mersPredictions.RData'), collapse = "")
-load(loadfilename2)
+# loadfilename2 <- paste(c(k,'mersPredictions.RData'), collapse = "")
 load(loadfilename)
+# load(loadfilename2)
+load('rdpDataframe.RData')
+
 
 rank <- rdp$genus
 names(rank) <- rank
@@ -57,6 +56,21 @@ mers <- lapply(sequences,
 names(mers) <- rank
 
 
+testingSeqsIndices <- lapply(uniqueRank, function(x) { 
+		which(x == rank)[1]
+	})
+testingSeqsIndices <- unlist(testingSeqsIndices)
+testingSeqs <- mers[testingSeqsIndices]
+
+
+
+bs_confidence_vector <- vector(mode = 'integer', length=length(testingSeqs))
+names(bs_confidence_vector) <- uniqueRank
+tfidfVals <- eval(parse(text = paste(c('tfidf',k,'mers'), collapse = '')))
+
+
+
+
 # MODIFICATION TO EXISTING SINTAX ALGORITHM 
  
 
@@ -65,31 +79,36 @@ names(mers) <- rank
 
 	# Singleton sequences must be present in our query database but 
 	# not in our 
- 
+
 
 	query_ranks <- rank
 	query_seqs <- mers
+
 
 	# Removing the singleton sequences from our reference database.
 
 	refernece_db_ranks <- rank
 	refernece_db_seqs <- mers
 
-	bs_confidence_vector <- vector(mode = 'integer', length=length(mers))
-	names(bs_confidence_vector) <- rdp$genus
+	# bs_confidence_vector <- vector(mode = 'integer', length=length(mers))
+	predictionVector <- vector(mode = 'character', length = length(testingSeqs))
+	#  names(bs_confidence_vector) <- rdp$genus
 
-	tfidfVals <- eval(parse(text = paste(c('tfidf',k,'mers'), collapse = '')))
+	# tfidfVals <- eval(parse(text = paste(c('tfidf',k,'mers'), collapse = '')))
 	for(i in start:end)
 	{	
-		tfidfSeq <- tfidfVals[[i]]
-		testSeq <- mers[[i]]
-		testRank <- rank[[i]]
+		tfidfSeq <- tfidfVals[[testingSeqsIndices[i]]]
+		testSeq <- testingSeqs[[i]]
+		testRank <- uniqueRank[[i]]
 		# predictedRankFromPredictions <- predicted_RDP_sintax[i]
-		training_db_rank <- rank[-i]
-		training_db_seqs <- mers[-i]
+		training_db_rank <- uniqueRank[-i]
+		training_db_seqs <- testingSeqs[-i]
 		confidenceVector <- vector(mode = 'integer', length = length(uniqueRank))
 		names(confidenceVector) <- uniqueRank	
 		sequence_df <- data.frame(matrix(NA, nrow = 100,  ncol = 5))
+		weights <- tfidfSeq[testSeq]
+		probs <- weights/sum(weights)
+		samp_matrix_w <- matrix(sample(length(testSeq),3200,replace = TRUE,prob=probs),nrow=100,ncol=32)
 
 
 
@@ -102,22 +121,48 @@ names(mers) <- rank
 			
 
 			testSeq <- unlist(testSeq)
-			sampleKmerIndices <- sample(length(testSeq), s, replace = FALSE)
-			bootstrappedKmers <- testSeq[sampleKmerIndices]
+			sampleKmerIndices <- samp_matrix_w[j,]
+			# bootstrappedKmers <- testSeq[sampleKmerIndices]
 			# The following is our overlap vector, which we can use to find the 
-			overlapVector <- sapply(training_db_seqs, k = bootstrappedKmers, FUN = function(X,k) {
-				t1 = unlist(X)
-				t2 = unlist(k)
-				# So instead of just getting the overlaps as 1s and 0s
-				# you would have to find the overlap in the tfidfseq
-				length(intersect(t1, t2))
- 					
+			overlapVector <- sapply(training_db_seqs, k = testSeq, FUN = function(X,k) {
+				trainKmers = unlist(X)
+				testKmers = unlist(k)
+
+				# replace duplicates with NAs to prevent matching
+				trainKmers[trainKmers %in% trainKmers[duplicated(trainKmers)]] <- NA_character_
+				testKmers[testKmers %in% testKmers[duplicated(testKmers)]] <- NA_character_
+
+				# find the first and last match
+				m <- rep(NA_integer_, length(testKmers))
+				m[!is.na(testKmers)] <- match(testKmers[!is.na(testKmers)], trainKmers)
+
+
+				eliminate <- logical(length(m))
+				w <- which(!is.na(m))
+				#cat(length(w),'\n')
+				if(length(w)!=0) {
+					for (i in seq_len(length(w) - 1)) {
+						if ((m[w[i + 1]] - m[w[i]]) > (w[i + 1] - w[i])) {
+							eliminate[w[i + 1]] <- TRUE
+							eliminate[w[i]] <- TRUE
+						}
+					}
+					m[eliminate] = NA_integer_
+					matches <- m[sampleKmerIndices]
+					matches <- which(!is.na(matches))
+					return(length(matches))
+				} else { 
+					return(0)
+				}
+
+						
 			})
 
 			# This will return the overlap vector with the hi*di product
 			# the next step is to divide them into the 
 			maxPos <- which(overlapVector == max(overlapVector))
 
+			cat('Matches with the best = ', max(overlapVector),'\n')
 			if(length(maxPos) > 1) {
 					maxPos <- sample(maxPos)[1]
 			} else { 
@@ -126,44 +171,43 @@ names(mers) <- rank
 
 			predicted <- training_db_rank[maxPos]
 			hi <- max(overlapVector)
-			
-			# confidenceVector[predicted] <- confidenceVector[predicted] + 1
+			# cat('number of hits = ',hi,'\n')
 			cat('Predicted In bootstrap : ', predicted,'\n')
 		
 		
 			# Now that we have the common kmers, we can use the same kmers to get the di from the tfidfSeq	
 			# we can use the common kmers to get the values that we need and store it in a dataframe
 
-			di <- sum(tfidfSeq[bootstrappedKmers])
+			# di <- sum(tfidfSeq[bootstrappedKmers])
 			sequence_df[j,1] <- predicted
-			sequence_df[j,2] <- hi
-			sequence_df[j,3] <- di
+			sequence_df[j,2] <- hi/32
+		
 			
 		}
-S
-		# Once we have the values for all the bootstraps. we need to calculate te di/davg fore every bootstrap
-		# we do this by doing the following 
-		davg <- sum(sequence_df[,3])/100
-		sequence_df[,4] <- sequence_df[,3]/davg
 
-		# once we have found the di/davg for every bootstrap[, find get the averaged
-		sequence_df[,5] <- sequence_df[,4] * sequence_df[,2]
+		
+		sequence_df[,5] <- sequence_df[,2]
 
-		# we run into an issue where our actual rank may not be present in one of the predicted ranks,
-		# if thats the case, then we need to control for it by assigning the value of tha bootstrap for that
-		# to 0.
 
-		predictedRanks <- sequence_df[,1]
-		predictedRanks <- unique(predictedRanks)
+		# prediction <- sample(names(which(table(sequence_df[,1]) == max(table(sequence_df[,1])))))[1]
+		# confidence <- table(sequence_df[,1])[prediction]
+		uniquePredictions <- unique(sequence_df[,1])
+		cvec <- sapply(uniquePredictions, function(x) { 
+				sum(sequence_df[which(sequence_df[,1] == x),2])
+			})
+		names(cvec) <- uniquePredictions
+		maxPos2 <- which(cvec == max(cvec))
+		if(length(maxPos2) > 1) { 
+			maxPos2 <- sample(maxPos2)[1]
+		}else{
+			maxPos2 <- maxPos2[1]
+		}
 
-		if(predictions[i] %in% predictedRanks) { 
-				# getting the threshold for our current sequence.
-				confidence <- sum(sequence_df[which(sequence_df[,1] == predictions[i]),5])/sum(sequence_df[,2])
-			} else if((predictions[i] %in% predictedRanks) == FALSE) { 
-					confidence <- 0 
-					}
+		confidence <- cvec[maxPos2]
+		prediction <- uniquePredictions[maxPos2]
 
 		bs_confidence_vector[i] <- confidence
+		predictionVector[i] <- prediction
 		cat('Query Seq : ', i,'\n')
 		cat('Final Prediction : ', testRank, '\n')
 	}
@@ -175,8 +219,10 @@ S
 	# we will use full length sequences and find out
 	# the correct genus using the annotation.
 
-	savelink <- paste(c('SINTAXtfidf',k,'mers_',end,'.RData'), collapse = "")
+	savelink <- paste(c('confidence_',end,'_v5_WRBalanced.RData'), collapse = "")
+	savelink2 <- paste(c('predictions_',end,'_v5_WRBalanced.RData'), collapse = "")
 	
 	save(bs_confidence_vector, file = savelink)
+	save(predictionVector, file = savelink2)
 
 # ----------------------------------------------------------------------------------------
