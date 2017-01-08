@@ -18,7 +18,7 @@ plotname <- paste0(c("LOTOv1"), collapse = "")
 
 plot(x = NULL , y = NULL , xlim = c(0.00, 1.00), ylim = c(0.00,1.00), 
     type = 'l' , xlab = '% Classified'
-    , ylab = 'Rate', main = 'v3|v3WR|v3WoR|v4WR|v4WoR', xaxs = 'i', yaxs='i', yaxt = 'n')
+    , ylab = 'Rate', main = 'v5WR', xaxs = 'i', yaxs='i', yaxt = 'n')
 labels <- c(0, 0.01, 0.05, 0.10, 0.25, 0.50, 0.75, 1.00)
 axis(2, labels^0.5,  labels)
 axis(2, seq(0,0.1,0.01)^0.5, labels = rep('',11))
@@ -36,8 +36,8 @@ for(lab2 in 1:(length(veks) - 1 )) {
 # loadfile1 <- paste(c("../PredictionsRData/",veks[lab2+1],"Confidencesv",version,"s",s,".RData"), collapse = "")
 # loadfile2 <- paste(c("../PredictionsRData/",veks[lab2+1],"Predictions.RData"), collapse = "")
 # loadfile1 <- 'RDP_V4_region.RData'
-loadfile2 <- '8mersPredictions.RData'
-loadfile3 <- '8mersConfidencesv3s32.RData'
+loadfile2 <- 'v5WRPredictions.RData'
+loadfile3 <- 'v5WRConfidences.RData'
 # load(loadfile1)
 load(loadfile3)
 load(loadfile2)
