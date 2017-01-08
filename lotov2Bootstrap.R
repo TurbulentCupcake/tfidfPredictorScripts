@@ -18,9 +18,9 @@ if(length(args)==0){
 }
 
 loadfilename <- paste(c('tfidf',k,'mers.RData'),collapse = "")
-loadfilename2 <- paste(c('LOTOv2_',k,'mersPredictions.RData'), collapse = "")
+# loadfilename2 <- paste(c('LOTOv2_',k,'mersPredictions.RData'), collapse = "")
 load(loadfilename)
-load(loadfilename2)
+# load(loadfilename2)
 load('rdpDataframe.RData')
 
 
@@ -58,7 +58,7 @@ for(i in start:end){
         testRank <- uniqueRank[i]
         training_db_seqs <- testingSeqs[-i]
         training_db_rank <- uniqueRank[-i]
-        sequence_df <- data.frame(matrix(NA, nrow = 100,  ncol = 5))
+        sequence_df <- data.frame(matrix(NA, nrow = 100,  ncol = 2))
 
 
 	cat('testRank ', testRank, '\n')

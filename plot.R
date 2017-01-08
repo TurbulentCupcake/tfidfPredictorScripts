@@ -131,7 +131,7 @@ for(i in seq_along(thresholdValues)) {
 
 }
 
-linetype=1
+linetype=2
 points(x = (1 - unclassifiedVector) , y =  sqrt(OCvector) ,type = 'l', col = 'red' ,lwd = 2, lty = linetype) 
 
 points(x =  (1 - unclassifiedVector) , y =  sqrt(MCvector) ,type = 'l', col = 'blue' ,lwd = 2, lty = linetype) 
@@ -259,7 +259,7 @@ legend(x = locs$x[1],y = locs$y[1], c("OCR","MCR"),
 legend(x = locs$x[2], y = locs$y[2], c("Orig","V3"), lty = c(2,3), lwd = c(3,3))
 
 plotloc <- locator()
-legend(x = plotloc$x[1], y = plotloc$y[1], c("v3","v3WR","v3WoR","v4WR","v4WoR"), lty = c(1,2,3,4,5), lwd = c(2,2,2,2,2))
+legend(x = plotloc$x[1], y = plotloc$y[1], c("v5","v3"), lty = c(1,2), lwd = c(2,2))
 legend(x = plotloc$x[2], y = plotloc$y[2], c("MCR","OCR"), col = c("blue","red"), lty = c(1,1), lwd = c(2,2))
 
 

@@ -30,6 +30,10 @@ if(length(args)==0){
          eval(parse(text=args[[i]]))
     }
 }
+<<<<<<< HEAD
+=======
+
+>>>>>>> 7ab9f7565f96502f1e392bdcdaef2a2fa4b22d44
 loadfilename <- paste(c('tfidf',k,'mers.RData'),collapse = "")
 # loadfilename2 <- paste(c(k,'mersPredictions.RData'), collapse = "")
 load(loadfilename)
@@ -162,7 +166,10 @@ tfidfVals <- eval(parse(text = paste(c('tfidf',k,'mers'), collapse = '')))
 			# the next step is to divide them into the 
 			maxPos <- which(overlapVector == max(overlapVector))
 
+<<<<<<< HEAD
 			cat('Matches with the best = ', max(overlapVector),'\n')
+=======
+>>>>>>> 7ab9f7565f96502f1e392bdcdaef2a2fa4b22d44
 			if(length(maxPos) > 1) {
 					maxPos <- sample(maxPos)[1]
 			} else { 
@@ -189,6 +196,7 @@ tfidfVals <- eval(parse(text = paste(c('tfidf',k,'mers'), collapse = '')))
 		sequence_df[,5] <- sequence_df[,2]
 
 
+<<<<<<< HEAD
 		# prediction <- sample(names(which(table(sequence_df[,1]) == max(table(sequence_df[,1])))))[1]
 		# confidence <- table(sequence_df[,1])[prediction]
 		uniquePredictions <- unique(sequence_df[,1])
@@ -205,6 +213,11 @@ tfidfVals <- eval(parse(text = paste(c('tfidf',k,'mers'), collapse = '')))
 
 		confidence <- cvec[maxPos2]
 		prediction <- uniquePredictions[maxPos2]
+=======
+		prediction <- sample(names(which(table(sequence_df[,1]) == max(table(sequence_df[,1])))))[1]
+		confidence <- table(sequence_df[,1])[prediction]
+
+>>>>>>> 7ab9f7565f96502f1e392bdcdaef2a2fa4b22d44
 
 		bs_confidence_vector[i] <- confidence
 		predictionVector[i] <- prediction
