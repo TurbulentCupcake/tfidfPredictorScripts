@@ -1,4 +1,4 @@
-k <- 2 # k-mer size
+k <- 8 # k-mer size
 
 train <- "ACTTGAACCCCCCGGAC"
 test <- "TTGAACCGG"
