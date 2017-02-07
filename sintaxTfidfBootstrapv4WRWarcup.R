@@ -32,16 +32,12 @@ if(length(args)==0){
     }
 }
 
-loadfilename <- paste(c('tfidf',k,'mers.RData'),collapse = "")
-# loadfilename2 <- paste(c(k,'mersPredictions.RData'), collapse = "")
-load(loadfilename)
-# load(loadfilename2)
-load('rdpDataframe.RData')
+load('warcupDataset.RData')
 
 
-rank <- rdp$genus
+rank <- warcup$genus
 names(rank) <- rank
-sequences <- rdp$sequences
+sequences <- warcup$sequences
 
 
 
@@ -61,8 +57,7 @@ names(mers) <- rank
 
 bs_confidence_vector <- vector(mode = 'integer', length=length(rank))
 names(bs_confidence_vector) <- uniqueRank
-tfidfVals <- eval(parse(text = paste(c('tfidf',k,'mers'), collapse = '')))
-
+tfidfVals <- warcup$tfidf8mers
 
 
 
@@ -87,7 +82,7 @@ tfidfVals <- eval(parse(text = paste(c('tfidf',k,'mers'), collapse = '')))
 
 	# bs_confidence_vector <- vector(mode = 'integer', length=length(mers))
 	predictionVector <- vector(mode = 'character', length = length(rank))
-	#  names(bs_confidence_vector) <- rdp$genus
+	#  names(bs_confidence_vector) <- warcup$genus
 
 	for(i in start:end)
 	{	
@@ -192,8 +187,8 @@ tfidfVals <- eval(parse(text = paste(c('tfidf',k,'mers'), collapse = '')))
 	# we will use full length sequences and find out
 	# the correct genus using the annotation.
 
-	savelink <- paste(c('confidence_',end,'_v4_WRBalanced.RData'), collapse = "")
-	savelink2 <- paste(c('predictions_',end,'_v4_WRBalanced.RData'), collapse = "")
+	savelink <- paste(c('confidence_',end,'_v4_Warcup.RData'), collapse = "")
+	savelink2 <- paste(c('predictions_',end,'_v4_Warcup.RData'), collapse = "")
 	
 	save(bs_confidence_vector, file = savelink)
 	save(predictionVector, file = savelink2)

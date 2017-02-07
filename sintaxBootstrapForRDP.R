@@ -1,7 +1,5 @@
 
 load('rdpDataframe.RData')
-load('RDP_V4_region.RData')
-
 
 args = (commandArgs(TRUE))
 
@@ -10,18 +8,18 @@ if(length(args)==0){
     ##supply default values
     start = 1
     end = 13212
-    k = 8
-    s = 32
+    k=8
+    s=32
 }else{
     for(i in 1:length(args)){
          eval(parse(text=args[[i]]))
     }
 }
-# loadfilename<- paste0(c(k,"mersOrigPredictions.RData"), collapse = "")
 
-rank <- rdp$genus[index]
+rank <- rdp$genus
 names(rank) <- rank
-sequences <- V4region
+sequences <- rdp$sequences
+
 
 uniqueRank <- unique(rank)
 names(uniqueRank) <- uniqueRank
@@ -42,7 +40,6 @@ names(mers) <- rank
 	# Singleton sequences must be present in our query database but 
 	# not in our 
  
-	
 
 	query_ranks <- rank
 	query_seqs <- mers
@@ -52,9 +49,9 @@ names(mers) <- rank
 	refernece_db_ranks <- rank
 	refernece_db_seqs <- mers
 
-	bs_confidence_vector <- vector(mode = 'integer', length=length(rank))
-	names(bs_confidence_vector) <- rank
-	predictionVector <- vector(mode = 'character', length = length(rank))
+	bs_confidence_vector <- vector(mode = 'integer', length=length(mers))
+	names(bs_confidence_vector) <- rdp$genus
+	predictionVector <- vector(mode = 'character', length = length(mers))
 
 	
 
@@ -63,13 +60,14 @@ names(mers) <- rank
 	{
 		testSeq <- mers[[i]]
 		testRank <- rank[[i]]
-		# predictedRankFromPredictions <- predictions[i]
+		# predictedRankFromPredictions <- predicted_RDP_sintax[i]
 		training_db_rank <- rank[-i]
 		training_db_seqs <- mers[-i]
 		confidenceVector <- vector(mode = 'integer', length = length(uniqueRank))
-		names(confidenceVector) <- uniqueRank	
+		names(confidenceVector) <- uniqueRank
 		sequence_df <- data.frame(matrix(NA, nrow = 100,  ncol = 5))
-
+		samp_matrix_w <- matrix(sample(length(testSeq),3200,replace = TRUE),nrow=100,ncol=32)
+	
 
 		cat('testRank ', testRank, '\n')
 
@@ -80,7 +78,7 @@ names(mers) <- rank
 			
 
 			testSeq <- unlist(testSeq)
-			sampleKmerIndices <- sample(length(testSeq), s, replace = FALSE)
+			sampleKmerIndices <- samp_matrix_w[j,]
 			bootstrappedKmers <- testSeq[sampleKmerIndices]
 
 			overlapVector <- sapply(training_db_seqs, k = bootstrappedKmers, FUN = function(X,k) {
@@ -90,7 +88,9 @@ names(mers) <- rank
 				
 			})
 			
-			overlapVector <- unlist(overlapVector)
+			# predicted <- training_db_rank[which(overlapVector == max(overlapVector))[1]]
+			# confidenceVector[predicted] <- confidenceVector[predicted] + 1
+			# cat('Predicted In bootstrap : ', predicted,'\n')
 
 			maxPos <- which(overlapVector == max(overlapVector))
 
@@ -100,18 +100,34 @@ names(mers) <- rank
 					maxPos <- maxPos[1]
 				}
 
-
 			predicted <- training_db_rank[maxPos]
 			hi <- max(overlapVector)
-			cat('Prediction : ', predicted,'\n')
-
+			cat('Value in bootstrap : ', hi,'\n')
+			
+			# confidenceVector[predicted] <- confidenceVector[predicted] + 1
+			cat('Predicted In bootstrap : ', predicted,'\n')
+		
+		
+			# Now that we have the common kmers, we can use the same kmers to get the di from the tfidfSeq	
+			# we can use the common kmers to get the values that we need and store it in a dataframe
 
 			sequence_df[j,1] <- predicted
-			sequence_df[j,2] <- hi/32
-			
+			sequence_df[j,2] <- 1
+
 		}
 
+		# bs_confidence_vector[i] <- confidenceVector[predictedRankFromPredictions]
+		# cat('Query Seq : ', i,'\n')
+		# cat('Final Prediction : ', testRank, '\n')
+		sequence_df[,5] <- sequence_df[,2]
 
+
+		# we run into an issue where our actual rank may not be present in one of the predicted ranks,
+		# if thats the case, then we need to control for it by assigning the value of tha bootstrap for that
+		# to 0.
+
+		# prediction <- sample(names(which(table(sequence_df[,1]) == max(table(sequence_df[,1])))))[1]
+		# confidence <- table(sequence_df[,1])[prediction]
 		uniquePredictions <- unique(sequence_df[,1])
 		cvec <- sapply(uniquePredictions, function(x) { 
 				sum(sequence_df[which(sequence_df[,1] == x),2])
@@ -130,11 +146,11 @@ names(mers) <- rank
 
 		bs_confidence_vector[i] <- confidence
 		predictionVector[i] <- prediction
-
-	
-
 		cat('Query Seq : ', i,'\n')
-		cat('Final Prediction : ', testRank, '\n')
+		cat('Actual Sequence : ', testRank,'\n')
+		cat('Final Prediction : ', prediction, '\n')
+		cat('Final Confidence : ', confidence, '\n')
+
 	}
 
 	# Now we can use the existing bootstrap to begin
@@ -144,9 +160,10 @@ names(mers) <- rank
 	# we will use full length sequences and find out
 	# the correct genus using the annotation.
 
-	savelink <- paste(c('confidence_modded_',k,'mers_',end,'_V4region.RData'), collapse = "")
-	savelink2 <- paste(c('prediction_modded_',k,'mers_',end,'_V4region.RData'), collapse = "")
+	savelink <- paste(c('sintax_',end,'_confidence.RData'), collapse = "")
+	savelink2 <- paste(c('sintax_',end,'_prediction.RData'), collapse = "")
 
+	
 	save(bs_confidence_vector, file = savelink)
 	save(predictionVector, file = savelink2)
 

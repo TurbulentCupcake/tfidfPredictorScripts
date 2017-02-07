@@ -1,23 +1,11 @@
-# tfidf contains the tf and idf functions, whose values will be returned 
-# into the current namespace. 
-# About the functions : 
-# ----- tf(query, dataset, mode) 
-# This returns the term frequency of the kmers in the query seqeunce as
-# a vector, where the names of the vector is the kmers and the values
-# of the vector is the term frequency.
-# >>>> Possible modes : rawsmooth, lognormal, doublenormK (default k = 0.5) 
-# ---- idf(query, dataset, mode) 
-# This returns the inverse document frequency as a vector that contains,
-# the idf values for every query in our sequence against the dataset.
-# The vector names are the names of the kmers and their respective
-# idf values. 
-# >>>> Possible modes : log, logsmooth, logmax, probfreq
-# Refer to tfidf wikipedia page for more information on the tfidf. 
 
-
-# source('tfidf.R')
 
 args = (commandArgs(TRUE))
+# Bi-directional sintax
+# use 50 replicates for bootstrapping on each size
+# use intersect. 
+
+
 
 if(length(args)==0){
     print("No arguments supplied.")
@@ -32,18 +20,14 @@ if(length(args)==0){
     }
 }
 
-loadfilename <- paste(c('tfidf',k,'mers.RData'),collapse = "")
-# loadfilename2 <- paste(c(k,'mersPredictions.RData'), collapse = "")
+loadfilename <- paste(c('VRtfidf',k,'mers.RData'),collapse = "")
 load(loadfilename)
-# load(loadfilename2)
 load('rdpDataframe.RData')
+load('RDP_V4_region.RData')
 
-
-rank <- rdp$genus
+rank <- rdp$genus[index]
 names(rank) <- rank
-sequences <- rdp$sequences
-
-
+sequences <- V4region
 
 uniqueRank <- unique(rank)
 names(uniqueRank) <- uniqueRank
@@ -58,10 +42,9 @@ mers <- lapply(sequences,
 names(mers) <- rank
 
 
-
 bs_confidence_vector <- vector(mode = 'integer', length=length(rank))
 names(bs_confidence_vector) <- uniqueRank
-tfidfVals <- eval(parse(text = paste(c('tfidf',k,'mers'), collapse = '')))
+tfidfVals <- eval(parse(text = paste(c('vr',k,'mers'), collapse = '')))
 
 
 
@@ -89,8 +72,8 @@ tfidfVals <- eval(parse(text = paste(c('tfidf',k,'mers'), collapse = '')))
 	predictionVector <- vector(mode = 'character', length = length(rank))
 	#  names(bs_confidence_vector) <- rdp$genus
 
-	for(i in start:end)
-	{	
+	for(i in start:end) { 
+
 		tfidfSeq <- tfidfVals[[i]]
 		testSeq <- mers[[i]]
 		testRank <- rank[[i]]
@@ -104,15 +87,30 @@ tfidfVals <- eval(parse(text = paste(c('tfidf',k,'mers'), collapse = '')))
 		probs <- weights/sum(weights)
 		samp_matrix_w <- matrix(sample(length(testSeq),3200,replace = TRUE,prob=probs),nrow=100,ncol=32)
 
+		# In the bidirectional sintax version, we do sintax in two ways, first with train and test, then
+		# test with train. 
+		# So in our first step, we proceed as we did with regular sintax, so we have to bootstrap our test
+		# sequence 50 times against our training set as we normally do and assign the confidences
+		# as we normally would by dividing the bootstrap replicate by 32.
 
+		# When we do it the other way round, we take our training set as our set of test sequences and we train
+		# against our previous test sequence. So what you do is : 
+		# for every bootstrap 
+		# go through each of sequence in the training set
+		# bootstrap 32 out of it 
+		# using those 32 try to find out how many hits you get against the test sequeence
+		# switch to the next one, take a new bootstrap replicate, match
+		# and continue to do this for every single sequence in the 13211 and find the 
+		# genus that we hit best on 
 
+		cat('testRank = ', testRank,'\n')
 
-		cat('testRank ', testRank, '\n')
+		# FRONT DIRECTION ---------------------------------------------------------------------
 
-		for(j in 1:100) {
+		for(j in 1:50) { 
 
 			cat('bootstrapNo : ', j, '\n')
-			
+
 
 			testSeq <- unlist(testSeq)
 			sampleKmerIndices <- samp_matrix_w[j,]
@@ -147,22 +145,60 @@ tfidfVals <- eval(parse(text = paste(c('tfidf',k,'mers'), collapse = '')))
 			# Now that we have the common kmers, we can use the same kmers to get the di from the tfidfSeq	
 			# we can use the common kmers to get the values that we need and store it in a dataframe
 
+			di <- sum(tfidfSeq[bootstrappedKmers])
 			sequence_df[j,1] <- predicted
 			sequence_df[j,2] <- hi/32
 		
-			
+
 		}
 
+		cat('SWITHCING DIRECTIONS','\n')
+		# REVERSE DIRECTION -------------------------------------------------------------
+
+		# We have two versions in this case, either we can take the random sampling of 32 
+		# or we can bias according to the kmer. 
+
+		# Bias with kmer ---------------------------------------------------------------
+
+		# we can bias the 32 picked kmers but that process is really slow to complete in
+		# reaasonable amount of time.
+		for(j in 51:100){
+
+			cat('bootstrapNo : ', j, '\n')
+
+
+			overlapVector <- sapply(training_db_seqs, k = testSeq, function(X,k) { 
+					t1 <- unlist(X)
+					t2 <- unlist(k)
+					length(intersect(t2,t1[sample(length(t1),32,replace = TRUE)])) 
+				})
+
+			overlapVector <- unlist(overlapVector)
+
+			maxPos <- which(overlapVector == max(overlapVector))
+
+			if(length(maxPos) > 1) {
+					maxPos <- sample(maxPos)[1]
+			} else { 
+					maxPos <- maxPos[1]
+				}
+
+
+			predicted <- training_db_rank[maxPos]
+			hi <- max(overlapVector)
+			
+			# confidenceVector[predicted] <- confidenceVector[predicted] + 1
+			cat('Predicted In bootstrap : ', predicted,'\n')
+			sequence_df[j,1] <- predicted
+			sequence_df[j,2] <- hi/32
 		
+
+		}
+
+
 		sequence_df[,5] <- sequence_df[,2]
 
 
-		# we run into an issue where our actual rank may not be present in one of the predicted ranks,
-		# if thats the case, then we need to control for it by assigning the value of tha bootstrap for that
-		# to 0.
-
-		# prediction <- sample(names(which(table(sequence_df[,1]) == max(table(sequence_df[,1])))))[1]
-		# confidence <- table(sequence_df[,1])[prediction]
 		uniquePredictions <- unique(sequence_df[,1])
 		cvec <- sapply(uniquePredictions, function(x) { 
 				sum(sequence_df[which(sequence_df[,1] == x),2])
@@ -183,18 +219,19 @@ tfidfVals <- eval(parse(text = paste(c('tfidf',k,'mers'), collapse = '')))
 		predictionVector[i] <- prediction
 		cat('Query Seq : ', i,'\n')
 		cat('Final Prediction : ', testRank, '\n')
+
+
+
 	}
 
-	# Now we can use the existing bootstrap to begin
-	# our predictions using overlapping k-mers
 
-	# Now instead of using only part of the sequence,
-	# we will use full length sequences and find out
-	# the correct genus using the annotation.
-
-	savelink <- paste(c('confidence_',end,'_v4_WRBalanced.RData'), collapse = "")
-	savelink2 <- paste(c('predictions_',end,'_v4_WRBalanced.RData'), collapse = "")
+	savelink <- paste(c('confidence_',end,'_v6_VarReg.RData'), collapse = "")
+	savelink2 <- paste(c('predictions_',end,'_v6_VarReg.RData'), collapse = "")
 	
 	save(bs_confidence_vector, file = savelink)
 	save(predictionVector, file = savelink2)
-# ----------------------------------------------------------------------------------------
+
+
+
+
+

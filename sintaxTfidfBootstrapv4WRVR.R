@@ -32,16 +32,16 @@ if(length(args)==0){
     }
 }
 
-loadfilename <- paste(c('tfidf',k,'mers.RData'),collapse = "")
+loadfilename <- paste(c('VRtfidf',k,'mers.RData'),collapse = "")
 # loadfilename2 <- paste(c(k,'mersPredictions.RData'), collapse = "")
 load(loadfilename)
 # load(loadfilename2)
 load('rdpDataframe.RData')
+load('RDP_V4_region.RData')
 
-
-rank <- rdp$genus
+rank <- rdp$genus[index]
 names(rank) <- rank
-sequences <- rdp$sequences
+sequences <- V4region
 
 
 
@@ -61,7 +61,7 @@ names(mers) <- rank
 
 bs_confidence_vector <- vector(mode = 'integer', length=length(rank))
 names(bs_confidence_vector) <- uniqueRank
-tfidfVals <- eval(parse(text = paste(c('tfidf',k,'mers'), collapse = '')))
+tfidfVals <- eval(parse(text = paste(c('vr',k,'mers'), collapse = '')))
 
 
 
@@ -192,8 +192,8 @@ tfidfVals <- eval(parse(text = paste(c('tfidf',k,'mers'), collapse = '')))
 	# we will use full length sequences and find out
 	# the correct genus using the annotation.
 
-	savelink <- paste(c('confidence_',end,'_v4_WRBalanced.RData'), collapse = "")
-	savelink2 <- paste(c('predictions_',end,'_v4_WRBalanced.RData'), collapse = "")
+	savelink <- paste(c('confidence_',end,'_v4_VarReg.RData'), collapse = "")
+	savelink2 <- paste(c('predictions_',end,'_v4_VarReg.RData'), collapse = "")
 	
 	save(bs_confidence_vector, file = savelink)
 	save(predictionVector, file = savelink2)

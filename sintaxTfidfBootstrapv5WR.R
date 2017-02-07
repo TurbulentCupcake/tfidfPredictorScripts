@@ -42,8 +42,6 @@ rank <- rdp$genus
 names(rank) <- rank
 sequences <- rdp$sequences
 
-
-
 uniqueRank <- unique(rank)
 names(uniqueRank) <- uniqueRank
 

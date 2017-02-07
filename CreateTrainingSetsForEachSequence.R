@@ -147,6 +147,9 @@ indexHolder <- as.list(integer(13212))
         names(genusIndices) <- uniqueTrainingRanks
         indexHolder[[i]] <- genusIndices
 
+
         # cat('Final Indices', genusIndices)
 
     }
+
+    save(indexHolder, file = paste0(c('tSet_',end), collapse = ""))

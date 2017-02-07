@@ -1,4 +1,4 @@
-/# tfidf contains the tf and idf functions, whose values will be returned 
+# tfidf contains the tf and idf functions, whose values will be returned 
 # into the current namespace. 
 # About the functions : 
 # ----- tf(query, dataset, mode) 
@@ -33,9 +33,7 @@ if(length(args)==0){
 }
 
 loadfilename <- paste(c('tfidf',k,'mers.RData'),collapse = "")
-loadfilename2 <- paste(c(k,'mersPredictions.RData'), collapse = "")
 load(loadfilename)
-load(loadfilename2)
 load('rdpDataframe.RData')
 
 
@@ -79,8 +77,11 @@ names(mers) <- rank
 
 	bs_confidence_vector <- vector(mode = 'integer', length=length(mers))
 	names(bs_confidence_vector) <- rdp$genus
-
 	tfidfVals <- eval(parse(text = paste(c('tfidf',k,'mers'), collapse = '')))
+
+
+	predictionVector <- vector(mode = 'character', length = length(rank))
+	
 	for(i in start:end)
 	{	
 		tfidfSeq <- tfidfVals[[i]]
@@ -160,17 +161,27 @@ names(mers) <- rank
 		# if thats the case, then we need to control for it by assigning the value of tha bootstrap for that
 		# to 0.
 
-		predictedRanks <- sequence_df[,1]
-		predictedRanks <- unique(predictedRanks)
 
-		if(predictions[i] %in% predictedRanks) { 
-				# getting the threshold for our current sequence.
-				confidence <- sum(sequence_df[which(sequence_df[,1] == predictions[i]),5])
-			} else if((predictions[i] %in% predictedRanks) == FALSE) { 
-					confidence <- 0 
-					}
+		uniquePredictions <- unique(sequence_df[,1])
+		cvec <- sapply(uniquePredictions, function(x) { 
+				sum(sequence_df[which(sequence_df[,1] == x),5])
+			})
+		names(cvec) <- uniquePredictions
+		maxPos2 <- which(cvec == max(cvec))
+		if(length(maxPos2) > 1) { 
+			maxPos2 <- sample(maxPos2)[1]
+		}else{
+			maxPos2 <- maxPos2[1]
+		}
+
+
+		confidence <- cvec[maxPos2]
+		prediction <- uniquePredictions[maxPos2]
 
 		bs_confidence_vector[i] <- confidence
+		predictionVector[i] <- prediction
+
+
 		cat('Query Seq : ', i,'\n')
 		cat('Final Prediction : ', testRank, '\n')
 	}
@@ -182,8 +193,10 @@ names(mers) <- rank
 	# we will use full length sequences and find out
 	# the correct genus using the annotation.
 
-	savelink <- paste(c('SINTAXtfidf',k,'mers_',end,'_v3.RData'), collapse = "")
-	
+	savelink <- paste(c('confidence_',end,'_v3_RDP.RData'), collapse = "")
+	savelink2 <- paste(c('predictions_',end,'_v3_RDP.RData'), collapse = "")
+
 	save(bs_confidence_vector, file = savelink)
+	save(predictionVector, file = savelink2)
 
 # ----------------------------------------------------------------------------------------
