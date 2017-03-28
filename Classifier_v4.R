@@ -29,29 +29,45 @@ TRAINFILE <- "trainset16_022016.fa"
 # VALUE <- "100v1" # name of the run
 VALUE <- paste(c(B,'v',version), collapse = '')
 K <- 8 # k-mer size
-# B <- 100 # bootstrap replicates
-# LOOS <- TRUE # perform leave-out-one-sequence?
-# LOOT <- FALSE # perform leave-out-one-taxon?
+B <- 100 # bootstrap replicates
+LOOS <- TRUE # perform leave-out-one-sequence?
+LOOT <- FALSE # perform leave-out-one-taxon?
 if (!LOOS && !LOOT)
 	TESTFILE <- "~/Downloads/SRR5279174.fasta"
-# SINTAX <- FALSE # no IDF weights, S=f(N), or formula
-if (SINTAX) {
+SINTAX <- FALSE # no IDF weights, S=f(N), or formula
+if (SINTAX) {	
 	S <- function(N) return(32)
 } else {
 	S <- function(N) ceiling(32/(1 + exp(-1.445*(log(N) - log(44.33)))))
 }
 # imbalance parameters
-# TOPHIT <- FALSE # only use the top hit from each genus
-# USEROOTS <- FALSE # re-balance by rooting 
+TOPHIT <- FALSE # only use the top hit from each genus
+USEROOTS <- FALSE # re-balance by rooting 
 if (SINTAX && TOPHIT)
 	warning("SINTAX and TOPHIT used in conjunction.")
 if (LOOS && LOOT)
 	stop("Only LOOS or LOOT may be TRUE.")
+# Balance sequence by picking one sequence for each genus as the triaing
+# set
+BALANCE <- FALSE 
 
 allkmers <- mkAllStrings(DNA_BASES, K)
 
 # load the training sequences
 train <- readDNAStringSet(TRAINFILE)
+
+if(BALANCE) { 
+	seqnames <-  sapply(strsplit(names(train), "Root;", fixed=TRUE),
+	`[`,
+	2L)
+	genera <- unique(seqnames)
+	indices <- sapply(genera,FUN = function(x) { 
+			which(seqnames == x)[1]
+		})
+	if(!all(seqnames[indices] == genera)) stop("Error occured here")
+	train <- train[indices]
+
+}
 
 # get the full classification (requires "Root;")
 classes <- sapply(strsplit(names(train), "Root;", fixed=TRUE),
